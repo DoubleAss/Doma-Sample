@@ -14,8 +14,31 @@ configurations {
 	}
 }
 
+// Copy the resources referred by the Doma annotation processors to
+// the destinationDir of the compileJava task
+task copyDomaResources(type: Sync)  {
+    from sourceSets.main.resources.srcDirs
+    into compileJava.destinationDir
+    include 'doma.compile.config'
+    include 'META-INF/**/*.sql'
+    include 'META-INF/**/*.script'
+}
+
+compileJava {
+    // Depend on the above task
+    dependsOn copyDomaResources
+    options.encoding = 'UTF-8'
+}
+
+compileTestJava {
+    options.encoding = 'UTF-8'
+    // Disable the annotation processors during the test run
+    options.compilerArgs = ['-proc:none']
+}
+
 repositories {
 	mavenCentral()
+	maven {url 'https://oss.sonatype.org/content/repositories/snapshots/'}
 }
 
 dependencies {
@@ -24,6 +47,8 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'mysql:mysql-connector-java'
 	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor "org.seasar.doma:doma:2.27.1"
+    implementation "org.seasar.doma:doma:2.27.1"
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}
